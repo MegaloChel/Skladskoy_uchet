@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+using System.IO;
 using WpfApp22.Models;
 
 namespace WpfApp22.Models;
@@ -24,9 +26,19 @@ public partial class СкладскойУчётContext : DbContext
     public virtual DbSet<Остатки> Остатки { get; set; } = null!;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#pragma warning disable CS8604
-        => optionsBuilder.UseSqlServer("Server=VANYACOMP;Database=Складской учёт;User Id=413_11;Password=надежныйпароль;TrustServerCertificate=True;");
-#pragma warning restore CS8604
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .Build();
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            optionsBuilder.UseSqlServer(connectionString);
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
