@@ -58,12 +58,10 @@ public partial class MainWindow : Window
         _viewModel.StatusMessage = "⏳ Загрузка таблиц...";
         try
         {
-            // 1. Загружаем основные справочники (БЕЗ отслеживания для списков)
-            var товары = await _context.Товары.AsNoTracking().ToListAsync();
-            var склады = await _context.Склады.AsNoTracking().ToListAsync();
-            var поставщики = await _context.Поставщики.AsNoTracking().ToListAsync();
-
-            // 2. Загружаем движения и остатки (С ОТСЛЕЖИВАНИЕМ, так как их будем редактировать)
+            // 1. Загружаем все таблицы С ОТСЛЕЖИВАНИЕМ, чтобы редактирование в DataGrid сохранялось.
+            await _context.Товары.LoadAsync();
+            await _context.Склады.LoadAsync();
+            await _context.Поставщики.LoadAsync();
             await _context.Приход.LoadAsync();
             await _context.Расход.LoadAsync();
             await _context.Остатки
@@ -71,18 +69,19 @@ public partial class MainWindow : Window
                 .Include(о => о.Склад)
                 .LoadAsync();
 
-            // 3. Устанавливаем источники данных для гридов
-            GridТовары.ItemsSource = товары; // Используем список без отслеживания
-            GridСклады.ItemsSource = склады;
-            GridПоставщики.ItemsSource = поставщики;
-
-            // Для движений и остатков используем локальные коллекции с отслеживанием
+            // 2. Источники данных для гридов — локальные коллекции EF (tracked).
+            GridТовары.ItemsSource = _context.Товары.Local.ToObservableCollection();
+            GridСклады.ItemsSource = _context.Склады.Local.ToObservableCollection();
+            GridПоставщики.ItemsSource = _context.Поставщики.Local.ToObservableCollection();
             GridПриход.ItemsSource = _context.Приход.Local.ToObservableCollection();
             GridРасход.ItemsSource = _context.Расход.Local.ToObservableCollection();
             GridОстатки.ItemsSource = _context.Остатки.Local.ToObservableCollection();
 
-            // 4. Настраиваем ComboBox'ы в гридах движений (источник - загруженные справочники)
-            SetupComboBoxColumns(товары, склады, поставщики);
+            // 3. Настраиваем ComboBox'ы в гридах движений (источник — актуальные tracked-справочники).
+            SetupComboBoxColumns(
+                _context.Товары.Local.ToList(),
+                _context.Склады.Local.ToList(),
+                _context.Поставщики.Local.ToList());
 
             _viewModel.StatusMessage = "✅ Все таблицы загружены. Используйте отдельные кнопки для сохранения.";
         }
@@ -202,20 +201,19 @@ public partial class MainWindow : Window
     }
 
     // --- ОБНОВЛЕНИЕ ВЫПАДАЮЩИХ СПИСКОВ ---
-    private async Task RefreshLookupsAsync()
+    private Task RefreshLookupsAsync()
     {
-        // Просто перезагружаем справочники без отслеживания и обновляем источники ComboBox'ов
-        var товары = await _context.Товары.AsNoTracking().ToListAsync();
-        var склады = await _context.Склады.AsNoTracking().ToListAsync();
-        var поставщики = await _context.Поставщики.AsNoTracking().ToListAsync();
+        // Для сохранения/редактирования используем tracked-локальные коллекции EF.
+        var товары = _context.Товары.Local.ToList();
+        var склады = _context.Склады.Local.ToList();
+        var поставщики = _context.Поставщики.Local.ToList();
 
-        // Обновляем сами гриды справочников, чтобы показать, например, новый ID
-        GridТовары.ItemsSource = товары;
-        GridСклады.ItemsSource = склады;
-        GridПоставщики.ItemsSource = поставщики;
+        GridТовары.ItemsSource = _context.Товары.Local.ToObservableCollection();
+        GridСклады.ItemsSource = _context.Склады.Local.ToObservableCollection();
+        GridПоставщики.ItemsSource = _context.Поставщики.Local.ToObservableCollection();
 
-        // Перенастраиваем ComboBox'ы с новыми данными
         SetupComboBoxColumns(товары, склады, поставщики);
+        return Task.CompletedTask;
     }
 
     private void SaveТовары() => SaveТовары_Click(null!, null!);
