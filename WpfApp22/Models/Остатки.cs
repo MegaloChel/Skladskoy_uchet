@@ -31,4 +31,7 @@ public partial class Остатки
     [ForeignKey("ТоварId")]
     [InverseProperty("Остатки")]
     public virtual Товары Товар { get; set; } = null!;
+
+    [NotMapped]
+    public int Доступно => Количество - В_Резерве;
 }
