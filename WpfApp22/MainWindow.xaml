@@ -447,7 +447,8 @@
                             <DataGridTextColumn Header="Тип" Binding="{Binding Тип}" Width="80"/>
                             <DataGridTextColumn Header="Кол-во" Binding="{Binding Количество}" Width="80"/>
                             <DataGridTextColumn Header="Цена" Binding="{Binding Цена, StringFormat='{}{0:N2}'}" Width="100"/>
-                            <DataGridTextColumn Header="Документ/Причина" Binding="{Binding Документ}" Width="*"/>
+                            <DataGridTextColumn Header="Контрагент" Binding="{Binding Контрагент}" Width="220"/>
+                            <DataGridTextColumn Header="Основание операции" Binding="{Binding ОснованиеОперации}" Width="*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
