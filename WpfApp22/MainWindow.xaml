@@ -194,7 +194,25 @@
                                        VerticalAlignment="Center"
                                        Margin="20,0,0,0"
                                        FontStyle="Italic"/>
-                            <TextBox x:Name="SearchСклады" Width="260" Margin="20,0,0,0" Padding="6" TextChanged="SearchСклады_TextChanged" ToolTip="Поиск по складам"/>
+                            <Grid Width="260" Margin="20,0,0,0">
+                                <TextBox x:Name="SearchСклады" Padding="6" TextChanged="SearchСклады_TextChanged" ToolTip="Поиск по складам"/>
+                                <TextBlock Text="Введите название или адрес..."
+                                           Foreground="Gray"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchСклады}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
@@ -232,7 +250,25 @@
                                        VerticalAlignment="Center"
                                        Margin="20,0,0,0"
                                        FontStyle="Italic"/>
-                            <TextBox x:Name="SearchПоставщики" Width="260" Margin="20,0,0,0" Padding="6" TextChanged="SearchПоставщики_TextChanged" ToolTip="Поиск по поставщикам"/>
+                            <Grid Width="260" Margin="20,0,0,0">
+                                <TextBox x:Name="SearchПоставщики" Padding="6" TextChanged="SearchПоставщики_TextChanged" ToolTip="Поиск по поставщикам"/>
+                                <TextBlock Text="Введите название или контакты..."
+                                           Foreground="Gray"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchПоставщики}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
@@ -273,7 +309,25 @@
                                 <TextBlock Text="Остатки рассчитываются автоматически. Для резерва выберите строку."
                                            VerticalAlignment="Center"
                                            Foreground="#7f8c8d"/>
-                                <TextBox x:Name="SearchОстатки" Width="280" Margin="14,0,0,0" Padding="6" TextChanged="SearchОстатки_TextChanged" ToolTip="Поиск по остаткам"/>
+                                <Grid Width="280" Margin="14,0,0,0">
+                                    <TextBox x:Name="SearchОстатки" Padding="6" TextChanged="SearchОстатки_TextChanged" ToolTip="Поиск по остаткам"/>
+                                    <TextBlock Text="Введите товар или склад..."
+                                               Foreground="Gray"
+                                               Margin="8,0,0,0"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Text, ElementName=SearchОстатки}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -356,7 +410,25 @@
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ПриходДатаПо" Width="120" SelectedDateChanged="ФильтрПриход_Changed"/>
                             <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetIncomeFilterCommand}" Padding="8,3"/>
-                            <TextBox x:Name="SearchПриход" Width="240" Margin="16,0,0,0" Padding="6" TextChanged="SearchПриход_TextChanged" ToolTip="Поиск по приходу"/>
+                            <Grid Width="240" Margin="16,0,0,0">
+                                <TextBox x:Name="SearchПриход" Padding="6" TextChanged="SearchПриход_TextChanged" ToolTip="Поиск по приходу"/>
+                                <TextBlock Text="Введите товар, склад, поставщика..."
+                                           Foreground="Gray"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchПриход}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
@@ -423,7 +495,25 @@
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="РасходДатаПо" Width="120" SelectedDateChanged="ФильтрРасход_Changed"/>
                             <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetOutcomeFilterCommand}" Padding="8,3"/>
-                            <TextBox x:Name="SearchРасход" Width="240" Margin="16,0,0,0" Padding="6" TextChanged="SearchРасход_TextChanged" ToolTip="Поиск по расходу"/>
+                            <Grid Width="240" Margin="16,0,0,0">
+                                <TextBox x:Name="SearchРасход" Padding="6" TextChanged="SearchРасход_TextChanged" ToolTip="Поиск по расходу"/>
+                                <TextBlock Text="Введите товар, склад или причину..."
+                                           Foreground="Gray"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchРасход}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
@@ -484,7 +574,25 @@
                             <DatePicker x:Name="ОтчетДатаС" Width="120"/>
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ОтчетДатаПо" Width="120"/>
-                            <TextBox x:Name="SearchОтчет" Width="220" Margin="16,0,0,0" Padding="6" TextChanged="SearchОтчет_TextChanged" ToolTip="Поиск по отчёту"/>
+                            <Grid Width="220" Margin="16,0,0,0">
+                                <TextBox x:Name="SearchОтчет" Padding="6" TextChanged="SearchОтчет_TextChanged" ToolTip="Поиск по отчёту"/>
+                                <TextBlock Text="Введите товар, тип или контрагента..."
+                                           Foreground="Gray"
+                                           Margin="8,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchОтчет}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                             <Button Content="📊 Сформировать отчёт / историю"
                                     Command="{Binding BuildReportCommand}"
                                     Padding="15,5"
