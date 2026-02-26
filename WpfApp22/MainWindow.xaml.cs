@@ -9,6 +9,7 @@ using System.Windows.Data;
 using Microsoft.EntityFrameworkCore;
 using WpfApp22.Services;
 using WpfApp22.Models;
+using WpfApp22.ViewModels;
 
 namespace WpfApp22;
 
@@ -16,19 +17,21 @@ public partial class MainWindow : Window
 {
     private СкладскойУчётContext _context;
     private ОтчётыСервис _отчётыСервис;
+    private readonly MainViewModel _viewModel;
 
     public MainWindow()
     {
         InitializeComponent();
         _context = new СкладскойУчётContext();
         _отчётыСервис = new ОтчётыСервис(_context);
-        DataContext = this;
+        _viewModel = new MainViewModel(Refresh, BuildReport);
+        DataContext = _viewModel;
         LoadAllData();
     }
 
     private async void LoadAllData()
     {
-        StatusText.Text = "⏳ Загрузка таблиц...";
+        _viewModel.StatusMessage = "⏳ Загрузка таблиц...";
         try
         {
             // 1. Загружаем основные справочники (БЕЗ отслеживания для списков)
@@ -57,11 +60,11 @@ public partial class MainWindow : Window
             // 4. Настраиваем ComboBox'ы в гридах движений (источник - загруженные справочники)
             SetupComboBoxColumns(товары, склады, поставщики);
 
-            StatusText.Text = "✅ Все таблицы загружены. Используйте отдельные кнопки для сохранения.";
+            _viewModel.StatusMessage = "✅ Все таблицы загружены. Используйте отдельные кнопки для сохранения.";
         }
         catch (Exception ex)
         {
-            StatusText.Text = "❌ Ошибка загрузки";
+            _viewModel.StatusMessage = "❌ Ошибка загрузки";
             MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -122,7 +125,7 @@ public partial class MainWindow : Window
 
             if (!entries.Any())
             {
-                StatusText.Text = $"ℹ️ Нет изменений в таблице '{entityName}'.";
+                _viewModel.StatusMessage = $"ℹ️ Нет изменений в таблице '{entityName}'.";
                 return true; // Не ошибка, просто нечего сохранять
             }
 
@@ -138,9 +141,9 @@ public partial class MainWindow : Window
                 }
             }
 
-            StatusText.Text = $"💾 Сохранение таблицы '{entityName}'...";
+            _viewModel.StatusMessage = $"💾 Сохранение таблицы '{entityName}'...";
             int count = await _context.SaveChangesAsync();
-            StatusText.Text = $"✅ Таблица '{entityName}' сохранена. Строк: {count}";
+            _viewModel.StatusMessage = $"✅ Таблица '{entityName}' сохранена. Строк: {count}";
 
             // Если сохраняли движения, пересчитываем остатки
             if (typeof(T) == typeof(Приход) || typeof(T) == typeof(Расход))
@@ -158,7 +161,7 @@ public partial class MainWindow : Window
         }
         catch (DbUpdateException ex)
         {
-            StatusText.Text = $"❌ Ошибка сохранения таблицы '{entityName}'";
+            _viewModel.StatusMessage = $"❌ Ошибка сохранения таблицы '{entityName}'";
             MessageBox.Show($"Ошибка базы данных: {ex.InnerException?.Message ?? ex.Message}\n\nПроверьте связи и уникальность полей.",
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             _context.ChangeTracker.Clear(); // Очищаем трекер после серьезной ошибки
@@ -167,7 +170,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            StatusText.Text = $"❌ Ошибка сохранения таблицы '{entityName}'";
+            _viewModel.StatusMessage = $"❌ Ошибка сохранения таблицы '{entityName}'";
             MessageBox.Show($"Неизвестная ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
@@ -300,7 +303,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            StatusText.Text = "🔄 Пересчёт остатков...";
+            _viewModel.StatusMessage = "🔄 Пересчёт остатков...";
 
             // Группируем приходы и расходы прямо в базе данных для эффективности
             var приходы = await _context.Приход
@@ -364,11 +367,11 @@ public partial class MainWindow : Window
             }
 
             await _context.SaveChangesAsync();
-            StatusText.Text = "✅ Остатки пересчитаны!";
+            _viewModel.StatusMessage = "✅ Остатки пересчитаны!";
         }
         catch (Exception ex)
         {
-            StatusText.Text = "❌ Ошибка пересчёта остатков";
+            _viewModel.StatusMessage = "❌ Ошибка пересчёта остатков";
             MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -378,15 +381,15 @@ public partial class MainWindow : Window
     {
         try
         {
-            StatusText.Text = "🔄 Полный пересчёт остатков...";
+            _viewModel.StatusMessage = "🔄 Полный пересчёт остатков...";
             await UpdateBalancesAsync();
-            StatusText.Text = "✅ Остатки пересчитаны!";
+            _viewModel.StatusMessage = "✅ Остатки пересчитаны!";
             MessageBox.Show("Остатки успешно пересчитаны из Прихода и Расхода!",
                 "Готово", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            StatusText.Text = "❌ Ошибка пересчёта";
+            _viewModel.StatusMessage = "❌ Ошибка пересчёта";
             MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка",
                 MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -430,7 +433,7 @@ public partial class MainWindow : Window
                         try
                         {
                             _context.SaveChanges();
-                            StatusText.Text = $"✅ Зарезервировано {количество} ед. товара.";
+                            _viewModel.StatusMessage = $"✅ Зарезервировано {количество} ед. товара.";
                             диалог.DialogResult = true;
                         }
                         catch (Exception ex)
@@ -463,12 +466,12 @@ public partial class MainWindow : Window
     }
 
     // --- ОТЧЁТНОСТЬ ---
-    private async void СформироватьОтчет_Click(object sender, RoutedEventArgs e)
+    private async Task BuildReportAsync()
     {
         DateTime? датаС = ОтчетДатаС.SelectedDate;
         DateTime? датаПо = ОтчетДатаПо.SelectedDate;
 
-        StatusText.Text = датаС.HasValue && датаПо.HasValue
+        _viewModel.StatusMessage = датаС.HasValue && датаПо.HasValue
             ? "⏳ Формирование отчёта за выбранный период..."
             : "⏳ Формирование полной истории операций...";
         try
@@ -476,18 +479,24 @@ public partial class MainWindow : Window
             var отчет = await _отчётыСервис.СформироватьОтчетПоДвижениюAsync(датаС, датаПо);
 
             GridОтчет.ItemsSource = отчет;
-            StatusText.Text = $"✅ Отчёт сформирован. Найдено записей: {отчет.Count}" +
+            _viewModel.StatusMessage = $"✅ Отчёт сформирован. Найдено записей: {отчет.Count}" +
                 (датаС.HasValue && датаПо.HasValue ? string.Empty : " (полная история)");
         }
         catch (Exception ex)
         {
-            StatusText.Text = "❌ Ошибка формирования отчёта";
+            _viewModel.StatusMessage = "❌ Ошибка формирования отчёта";
             MessageBox.Show($"Ошибка: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
+
+    private async void BuildReport()
+    {
+        await BuildReportAsync();
+    }
+
     // --- ФИЛЬТРАЦИЯ И ОБНОВЛЕНИЕ (исправленные методы) ---
-    private void Refresh_Click(object sender, RoutedEventArgs e)
+    private void Refresh()
     {
         // Сохраняем состояние фильтров перед перезагрузкой
         var приходФильтрС = ПриходДатаС.SelectedDate;
@@ -512,7 +521,7 @@ public partial class MainWindow : Window
         if (расходФильтрС.HasValue || расходФильтрПо.HasValue)
             ФильтрРасход_Changed(null, null);
 
-        StatusText.Text = "✅ Данные обновлены!";
+        _viewModel.StatusMessage = "✅ Данные обновлены!";
     }
 
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)

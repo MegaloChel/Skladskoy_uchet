@@ -1,30 +1,40 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
-namespace WpfApp22.ViewModels
+namespace WpfApp22.ViewModels;
+
+public class MainViewModel : INotifyPropertyChanged
 {
-    public class MainViewModel : INotifyPropertyChanged
-    {
-        private string _statusMessage = "Готово";
+    private string _statusMessage = "Готово";
 
-        public string StatusMessage
+    public MainViewModel(Action refreshAction, Action buildReportAction)
+    {
+        RefreshCommand = new RelayCommand(refreshAction);
+        BuildReportCommand = new RelayCommand(buildReportAction);
+    }
+
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set
         {
-            get => _statusMessage;
-            set
+            if (_statusMessage != value)
             {
-                if (_statusMessage != value)
-                {
-                    _statusMessage = value;
-                    OnPropertyChanged();
-                }
+                _statusMessage = value;
+                OnPropertyChanged();
             }
         }
+    }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+    public ICommand RefreshCommand { get; }
+    public ICommand BuildReportCommand { get; }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

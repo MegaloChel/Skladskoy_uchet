@@ -27,7 +27,7 @@
                                FontWeight="Bold"
                                VerticalAlignment="Center"/>
                     <Button Content="🔄 Обновить всё"
-                            Click="Refresh_Click"
+                            Command="{Binding RefreshCommand}"
                             Padding="10,5"
                             Margin="20,0,0,0"
                             Background="#95a5a6"
@@ -424,7 +424,7 @@
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ОтчетДатаПо" Width="120"/>
                             <Button Content="📊 Сформировать отчёт / историю"
-                                    Click="СформироватьОтчет_Click"
+                                    Command="{Binding BuildReportCommand}"
                                     Background="#3498db"
                                     Foreground="White"
                                     Padding="15,5"
@@ -458,7 +458,7 @@
         <!-- Строка состояния -->
         <StatusBar Grid.Row="2">
             <StatusBarItem>
-                <TextBlock x:Name="StatusText" Text="Готово" FontWeight="Bold"/>
+                <TextBlock Text="{Binding StatusMessage}" FontWeight="Bold"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>
