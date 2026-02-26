@@ -20,7 +20,9 @@ public class MainViewModel : INotifyPropertyChanged
         Action reserveAction,
         Action fullRecountAction,
         Action resetIncomeFilterAction,
-        Action resetOutcomeFilterAction)
+        Action resetOutcomeFilterAction,
+        Action undoAction,
+        Action redoAction)
     {
         RefreshCommand = new RelayCommand(refreshAction);
         BuildReportCommand = new RelayCommand(buildReportAction);
@@ -33,6 +35,8 @@ public class MainViewModel : INotifyPropertyChanged
         FullRecountCommand = new RelayCommand(fullRecountAction);
         ResetIncomeFilterCommand = new RelayCommand(resetIncomeFilterAction);
         ResetOutcomeFilterCommand = new RelayCommand(resetOutcomeFilterAction);
+        UndoCommand = new RelayCommand(undoAction);
+        RedoCommand = new RelayCommand(redoAction);
     }
 
     public string StatusMessage
@@ -59,6 +63,8 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand FullRecountCommand { get; }
     public ICommand ResetIncomeFilterCommand { get; }
     public ICommand ResetOutcomeFilterCommand { get; }
+    public ICommand UndoCommand { get; }
+    public ICommand RedoCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -5,6 +5,11 @@
         Title="СКЛАДСКОЙ УЧЁТ - Полный доступ"
         Height="750" Width="1300"
         WindowStartupLocation="CenterScreen">
+    <Window.InputBindings>
+        <KeyBinding Key="Z" Modifiers="Control" Command="{Binding UndoCommand}"/>
+        <KeyBinding Key="Z" Modifiers="Control+Shift" Command="{Binding RedoCommand}"/>
+    </Window.InputBindings>
+
     <Window.Resources>
         <SolidColorBrush x:Key="AppBg" Color="#F5F7FB"/>
         <SolidColorBrush x:Key="CardBg" Color="#FFFFFF"/>
@@ -98,6 +103,8 @@
                             Padding="10,5"
                             Margin="20,0,0,0"
                             VerticalAlignment="Center"/>
+                <Button Content="↶ Undo" Command="{Binding UndoCommand}" Margin="12,0,0,0" Padding="10,5" VerticalAlignment="Center"/>
+                    <Button Content="↷ Redo" Command="{Binding RedoCommand}" Margin="8,0,0,0" Padding="10,5" VerticalAlignment="Center"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -187,6 +194,7 @@
                                        VerticalAlignment="Center"
                                        Margin="20,0,0,0"
                                        FontStyle="Italic"/>
+                            <TextBox x:Name="SearchСклады" Width="260" Margin="20,0,0,0" Padding="6" TextChanged="SearchСклады_TextChanged" ToolTip="Поиск по складам"/>
                         </StackPanel>
                     </Border>
 
@@ -224,6 +232,7 @@
                                        VerticalAlignment="Center"
                                        Margin="20,0,0,0"
                                        FontStyle="Italic"/>
+                            <TextBox x:Name="SearchПоставщики" Width="260" Margin="20,0,0,0" Padding="6" TextChanged="SearchПоставщики_TextChanged" ToolTip="Поиск по поставщикам"/>
                         </StackPanel>
                     </Border>
 
@@ -264,6 +273,7 @@
                                 <TextBlock Text="Остатки рассчитываются автоматически. Для резерва выберите строку."
                                            VerticalAlignment="Center"
                                            Foreground="#7f8c8d"/>
+                                <TextBox x:Name="SearchОстатки" Width="280" Margin="14,0,0,0" Padding="6" TextChanged="SearchОстатки_TextChanged" ToolTip="Поиск по остаткам"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
@@ -346,6 +356,7 @@
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ПриходДатаПо" Width="120" SelectedDateChanged="ФильтрПриход_Changed"/>
                             <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetIncomeFilterCommand}" Padding="8,3"/>
+                            <TextBox x:Name="SearchПриход" Width="240" Margin="16,0,0,0" Padding="6" TextChanged="SearchПриход_TextChanged" ToolTip="Поиск по приходу"/>
                         </StackPanel>
                     </Border>
 
@@ -412,6 +423,7 @@
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="РасходДатаПо" Width="120" SelectedDateChanged="ФильтрРасход_Changed"/>
                             <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetOutcomeFilterCommand}" Padding="8,3"/>
+                            <TextBox x:Name="SearchРасход" Width="240" Margin="16,0,0,0" Padding="6" TextChanged="SearchРасход_TextChanged" ToolTip="Поиск по расходу"/>
                         </StackPanel>
                     </Border>
 
@@ -472,6 +484,7 @@
                             <DatePicker x:Name="ОтчетДатаС" Width="120"/>
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ОтчетДатаПо" Width="120"/>
+                            <TextBox x:Name="SearchОтчет" Width="220" Margin="16,0,0,0" Padding="6" TextChanged="SearchОтчет_TextChanged" ToolTip="Поиск по отчёту"/>
                             <Button Content="📊 Сформировать отчёт / историю"
                                     Command="{Binding BuildReportCommand}"
                                     Padding="15,5"

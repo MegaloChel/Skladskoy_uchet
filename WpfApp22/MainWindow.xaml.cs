@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using WpfApp22.Services;
 using WpfApp22.Models;
 using WpfApp22.ViewModels;
@@ -18,6 +19,16 @@ public partial class MainWindow : Window
     private СкладскойУчётContext _context;
     private ОтчётыСервис _отчётыСервис;
     private readonly MainViewModel _viewModel;
+    private readonly Stack<List<ChangeOperation>> _redoStack = new();
+
+
+    private sealed class ChangeOperation
+    {
+        public object Entity { get; init; } = null!;
+        public EntityState State { get; init; }
+        public Dictionary<string, object?> OriginalValues { get; init; } = new();
+        public Dictionary<string, object?> CurrentValues { get; init; } = new();
+    }
 
     public MainWindow()
     {
@@ -35,7 +46,9 @@ public partial class MainWindow : Window
             Зарезервировать,
             ПолныйПересчётОстатков,
             СброситьФильтрПриход,
-            СброситьФильтрРасход);
+            СброситьФильтрРасход,
+            UndoChanges,
+            RedoChanges);
         DataContext = _viewModel;
         LoadAllData();
     }
@@ -154,6 +167,7 @@ public partial class MainWindow : Window
 
             _viewModel.StatusMessage = $"💾 Сохранение таблицы '{entityName}'...";
             int count = await _context.SaveChangesAsync();
+            _redoStack.Clear();
             _viewModel.StatusMessage = $"✅ Таблица '{entityName}' сохранена. Строк: {count}";
 
             // Если сохраняли движения, пересчитываем остатки
@@ -526,6 +540,7 @@ public partial class MainWindow : Window
         var расходФильтрС = РасходДатаС.SelectedDate;
         var расходФильтрПо = РасходДатаПо.SelectedDate;
 
+        _redoStack.Clear();
         _context.Dispose();
         _context = new СкладскойУчётContext();
         _отчётыСервис = new ОтчётыСервис(_context);
@@ -638,6 +653,143 @@ public partial class MainWindow : Window
         var view = CollectionViewSource.GetDefaultView(GridРасход.ItemsSource);
         if (view != null) view.Filter = null;
     }
+
+    private void ApplyGridSearch(DataGrid grid, string filter)
+    {
+        if (grid.ItemsSource == null) return;
+
+        var view = CollectionViewSource.GetDefaultView(grid.ItemsSource);
+        if (view == null) return;
+
+        var term = filter.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            view.Filter = null;
+            return;
+        }
+
+        view.Filter = item => ItemMatches(item, term);
+    }
+
+    private static bool ItemMatches(object? item, string term)
+    {
+        if (item == null) return false;
+
+        foreach (var prop in item.GetType().GetProperties())
+        {
+            var value = prop.GetValue(item);
+            if (value == null) continue;
+
+            if (value is string text && text.ToLowerInvariant().Contains(term))
+                return true;
+
+            if (value is ValueType && value.ToString()?.ToLowerInvariant().Contains(term) == true)
+                return true;
+
+            if (!(prop.PropertyType.Namespace?.StartsWith("System") ?? false))
+            {
+                foreach (var nested in prop.PropertyType.GetProperties())
+                {
+                    var nestedValue = nested.GetValue(value)?.ToString();
+                    if (!string.IsNullOrWhiteSpace(nestedValue) && nestedValue.ToLowerInvariant().Contains(term))
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static Dictionary<string, object?> ReadValues(EntityEntry entry)
+        => entry.CurrentValues.Properties.ToDictionary(p => p.Name, p => entry.CurrentValues[p.Name]);
+
+    private static Dictionary<string, object?> ReadOriginalValues(EntityEntry entry)
+        => entry.OriginalValues.Properties.ToDictionary(p => p.Name, p => entry.OriginalValues[p.Name]);
+
+    private List<ChangeOperation> CapturePendingChanges()
+    {
+        return _context.ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Modified or EntityState.Added or EntityState.Deleted)
+            .Select(e => new ChangeOperation
+            {
+                Entity = e.Entity,
+                State = e.State,
+                OriginalValues = ReadOriginalValues(e),
+                CurrentValues = ReadValues(e)
+            })
+            .ToList();
+    }
+
+    private void UndoChanges()
+    {
+        var changes = CapturePendingChanges();
+        if (changes.Count == 0)
+        {
+            _viewModel.StatusMessage = "ℹ️ Нет несохранённых изменений для Undo.";
+            return;
+        }
+
+        foreach (var change in changes)
+        {
+            var entry = _context.Entry(change.Entity);
+            switch (change.State)
+            {
+                case EntityState.Modified:
+                    entry.CurrentValues.SetValues(change.OriginalValues);
+                    entry.State = EntityState.Unchanged;
+                    break;
+                case EntityState.Added:
+                    entry.State = EntityState.Detached;
+                    break;
+                case EntityState.Deleted:
+                    entry.State = EntityState.Unchanged;
+                    break;
+            }
+        }
+
+        _redoStack.Push(changes);
+        LoadAllData();
+        _viewModel.StatusMessage = "↶ Отмена изменений выполнена (Ctrl+Z).";
+    }
+
+    private void RedoChanges()
+    {
+        if (_redoStack.Count == 0)
+        {
+            _viewModel.StatusMessage = "ℹ️ Нет изменений для Redo.";
+            return;
+        }
+
+        var changes = _redoStack.Pop();
+        foreach (var change in changes)
+        {
+            var entry = _context.Entry(change.Entity);
+            switch (change.State)
+            {
+                case EntityState.Modified:
+                    entry.CurrentValues.SetValues(change.CurrentValues);
+                    entry.State = EntityState.Modified;
+                    break;
+                case EntityState.Added:
+                    if (entry.State == EntityState.Detached)
+                        _context.Add(change.Entity);
+                    entry.State = EntityState.Added;
+                    break;
+                case EntityState.Deleted:
+                    entry.State = EntityState.Deleted;
+                    break;
+            }
+        }
+
+        _viewModel.StatusMessage = "↷ Повтор изменений выполнен (Ctrl+Shift+Z).";
+    }
+
+    private void SearchСклады_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridСклады, SearchСклады.Text);
+    private void SearchПоставщики_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridПоставщики, SearchПоставщики.Text);
+    private void SearchОстатки_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridОстатки, SearchОстатки.Text);
+    private void SearchПриход_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridПриход, SearchПриход.Text);
+    private void SearchРасход_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridРасход, SearchРасход.Text);
+    private void SearchОтчет_TextChanged(object sender, TextChangedEventArgs e) => ApplyGridSearch(GridОтчет, SearchОтчет.Text);
 
     protected override void OnClosed(EventArgs e)
     {
