@@ -1,6 +1,6 @@
 using WpfApp22.Models;
 
-namespace WpfApp22.Application;
+namespace WpfApp22.Services;
 
 public static class ТоварыСервис
 {

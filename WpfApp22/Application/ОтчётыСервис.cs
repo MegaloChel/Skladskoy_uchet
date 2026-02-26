@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WpfApp22.Models;
 
-namespace WpfApp22.Application;
+namespace WpfApp22.Services;
 
 public sealed class ОтчётыСервис
 {

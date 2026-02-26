@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using Microsoft.EntityFrameworkCore;
-using WpfApp22.Application;
+using WpfApp22.Services;
 using WpfApp22.Models;
 
 namespace WpfApp22;
