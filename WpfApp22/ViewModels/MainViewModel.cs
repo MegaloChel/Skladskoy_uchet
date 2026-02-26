@@ -9,10 +9,30 @@ public class MainViewModel : INotifyPropertyChanged
 {
     private string _statusMessage = "Готово";
 
-    public MainViewModel(Action refreshAction, Action buildReportAction)
+    public MainViewModel(
+        Action refreshAction,
+        Action buildReportAction,
+        Action saveProductsAction,
+        Action saveWarehousesAction,
+        Action saveSuppliersAction,
+        Action saveIncomeAction,
+        Action saveOutcomeAction,
+        Action reserveAction,
+        Action fullRecountAction,
+        Action resetIncomeFilterAction,
+        Action resetOutcomeFilterAction)
     {
         RefreshCommand = new RelayCommand(refreshAction);
         BuildReportCommand = new RelayCommand(buildReportAction);
+        SaveProductsCommand = new RelayCommand(saveProductsAction);
+        SaveWarehousesCommand = new RelayCommand(saveWarehousesAction);
+        SaveSuppliersCommand = new RelayCommand(saveSuppliersAction);
+        SaveIncomeCommand = new RelayCommand(saveIncomeAction);
+        SaveOutcomeCommand = new RelayCommand(saveOutcomeAction);
+        ReserveCommand = new RelayCommand(reserveAction);
+        FullRecountCommand = new RelayCommand(fullRecountAction);
+        ResetIncomeFilterCommand = new RelayCommand(resetIncomeFilterAction);
+        ResetOutcomeFilterCommand = new RelayCommand(resetOutcomeFilterAction);
     }
 
     public string StatusMessage
@@ -30,6 +50,15 @@ public class MainViewModel : INotifyPropertyChanged
 
     public ICommand RefreshCommand { get; }
     public ICommand BuildReportCommand { get; }
+    public ICommand SaveProductsCommand { get; }
+    public ICommand SaveWarehousesCommand { get; }
+    public ICommand SaveSuppliersCommand { get; }
+    public ICommand SaveIncomeCommand { get; }
+    public ICommand SaveOutcomeCommand { get; }
+    public ICommand ReserveCommand { get; }
+    public ICommand FullRecountCommand { get; }
+    public ICommand ResetIncomeFilterCommand { get; }
+    public ICommand ResetOutcomeFilterCommand { get; }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

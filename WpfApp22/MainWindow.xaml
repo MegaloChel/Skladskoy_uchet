@@ -78,7 +78,7 @@
                     <Border Grid.Row="1" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="💾 Сохранить изменения в товарах"
-                                    Click="SaveТовары_Click"
+                                    Command="{Binding SaveProductsCommand}"
                                     Background="#27ae60" 
                                     Foreground="White"
                                     FontWeight="Bold" 
@@ -118,7 +118,7 @@
                     <Border Grid.Row="0" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="💾 Сохранить изменения в складах"
-                                    Click="SaveСклады_Click"
+                                    Command="{Binding SaveWarehousesCommand}"
                                     Background="#27ae60" 
                                     Foreground="White"
                                     FontWeight="Bold" 
@@ -158,7 +158,7 @@
                     <Border Grid.Row="0" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="💾 Сохранить изменения в поставщиках"
-                                    Click="SaveПоставщики_Click"
+                                    Command="{Binding SaveSuppliersCommand}"
                                     Background="#27ae60" 
                                     Foreground="White"
                                     FontWeight="Bold" 
@@ -212,7 +212,7 @@
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <Button Click="Зарезервировать_Click"
+                                <Button Command="{Binding ReserveCommand}"
                                         ToolTip="Зарезервировать выбранный товар"
                                         Padding="10,5"
                                         Background="#f39c12"
@@ -225,7 +225,7 @@
                                         <TextBlock Text="Резерв" FontSize="12"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Click="ПолныйПересчётОстатков_Click"
+                                <Button Command="{Binding FullRecountCommand}"
                                         ToolTip="Полная очистка и пересчёт остатков"
                                         Padding="10,5"
                                         Background="#3498db"
@@ -290,7 +290,7 @@
                             <DatePicker x:Name="ПриходДатаС" Width="120" SelectedDateChanged="ФильтрПриход_Changed"/>
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ПриходДатаПо" Width="120" SelectedDateChanged="ФильтрПриход_Changed"/>
-                            <Button Content="✕ Сбросить" Margin="10,0,0,0" Click="СброситьФильтрПриход_Click" Padding="8,3"/>
+                            <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetIncomeFilterCommand}" Padding="8,3"/>
                         </StackPanel>
                     </Border>
 
@@ -298,7 +298,7 @@
                     <Border Grid.Row="1" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="💾 Сохранить приход"
-                                    Click="SaveПриход_Click"
+                                    Command="{Binding SaveIncomeCommand}"
                                     Background="#27ae60" 
                                     Foreground="White"
                                     FontWeight="Bold" 
@@ -359,7 +359,7 @@
                             <DatePicker x:Name="РасходДатаС" Width="120" SelectedDateChanged="ФильтрРасход_Changed"/>
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="РасходДатаПо" Width="120" SelectedDateChanged="ФильтрРасход_Changed"/>
-                            <Button Content="✕ Сбросить" Margin="10,0,0,0" Click="СброситьФильтрРасход_Click" Padding="8,3"/>
+                            <Button Content="✕ Сбросить" Margin="10,0,0,0" Command="{Binding ResetOutcomeFilterCommand}" Padding="8,3"/>
                         </StackPanel>
                     </Border>
 
@@ -367,7 +367,7 @@
                     <Border Grid.Row="1" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
                             <Button Content="💾 Сохранить расход"
-                                    Click="SaveРасход_Click"
+                                    Command="{Binding SaveOutcomeCommand}"
                                     Background="#27ae60" 
                                     Foreground="White"
                                     FontWeight="Bold" 

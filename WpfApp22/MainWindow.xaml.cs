@@ -24,7 +24,18 @@ public partial class MainWindow : Window
         InitializeComponent();
         _context = new СкладскойУчётContext();
         _отчётыСервис = new ОтчётыСервис(_context);
-        _viewModel = new MainViewModel(Refresh, BuildReport);
+        _viewModel = new MainViewModel(
+            Refresh,
+            BuildReport,
+            SaveТовары,
+            SaveСклады,
+            SaveПоставщики,
+            SaveПриход,
+            SaveРасход,
+            Зарезервировать,
+            ПолныйПересчётОстатков,
+            СброситьФильтрПриход,
+            СброситьФильтрРасход);
         DataContext = _viewModel;
         LoadAllData();
     }
@@ -192,6 +203,17 @@ public partial class MainWindow : Window
         // Перенастраиваем ComboBox'ы с новыми данными
         SetupComboBoxColumns(товары, склады, поставщики);
     }
+
+    private void SaveТовары() => SaveТовары_Click(null!, null!);
+    private void SaveСклады() => SaveСклады_Click(null!, null!);
+    private void SaveПоставщики() => SaveПоставщики_Click(null!, null!);
+    private void SaveПриход() => SaveПриход_Click(null!, null!);
+    private void SaveРасход() => SaveРасход_Click(null!, null!);
+
+    private void Зарезервировать() => Зарезервировать_Click(null!, null!);
+    private void ПолныйПересчётОстатков() => ПолныйПересчётОстатков_Click(null!, null!);
+    private void СброситьФильтрПриход() => СброситьФильтрПриход_Click(null!, null!);
+    private void СброситьФильтрРасход() => СброситьФильтрРасход_Click(null!, null!);
 
     // --- МЕТОДЫ СОХРАНЕНИЯ ДЛЯ КАЖДОЙ ТАБЛИЦЫ ---
     private async void SaveТовары_Click(object sender, RoutedEventArgs e)
