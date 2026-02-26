@@ -319,10 +319,10 @@
                               Margin="5">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="№" Binding="{Binding Id}" IsReadOnly="True" Width="50"/>
-                            <DataGridComboBoxColumn Header="Товар"
+                            <DataGridComboBoxColumn Header="Товар (артикул)"
                                                     SelectedValueBinding="{Binding ТоварId}"
                                                     SelectedValuePath="Id"
-                                                    DisplayMemberPath="Название"
+                                                    DisplayMemberPath="ПредставлениеДляВыбора"
                                                     Width="250"/>
                             <DataGridComboBoxColumn Header="Склад"
                                                     SelectedValueBinding="{Binding СкладId}"
@@ -388,10 +388,10 @@
                               Margin="5">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="№" Binding="{Binding Id}" IsReadOnly="True" Width="50"/>
-                            <DataGridComboBoxColumn Header="Товар"
+                            <DataGridComboBoxColumn Header="Товар (артикул)"
                                                     SelectedValueBinding="{Binding ТоварId}"
                                                     SelectedValuePath="Id"
-                                                    DisplayMemberPath="Название"
+                                                    DisplayMemberPath="ПредставлениеДляВыбора"
                                                     Width="250"/>
                             <DataGridComboBoxColumn Header="Склад"
                                                     SelectedValueBinding="{Binding СкладId}"
@@ -418,12 +418,12 @@
                     <!-- Панель формирования отчёта -->
                     <Border Grid.Row="0" Background="#ecf0f1" Padding="8" Margin="5">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Период отчёта:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TextBlock Text="Период отчёта (необязательно):" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <TextBlock Text="с:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                             <DatePicker x:Name="ОтчетДатаС" Width="120"/>
                             <TextBlock Text="по:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                             <DatePicker x:Name="ОтчетДатаПо" Width="120"/>
-                            <Button Content="📊 Сформировать отчёт"
+                            <Button Content="📊 Сформировать отчёт / историю"
                                     Click="СформироватьОтчет_Click"
                                     Background="#3498db"
                                     Foreground="White"

@@ -68,19 +68,19 @@ public partial class MainWindow : Window
         // Настройка для таблицы "Приход"
         foreach (var column in GridПриход.Columns.OfType<DataGridComboBoxColumn>())
         {
-            if (column.Header.ToString() == "Товар")
+            if (column.Header?.ToString()?.StartsWith("Товар") == true)
             {
                 column.ItemsSource = товары;
-                column.DisplayMemberPath = "Название";
+                column.DisplayMemberPath = "ПредставлениеДляВыбора";
                 column.SelectedValuePath = "Id";
             }
-            else if (column.Header.ToString() == "Склад")
+            else if (column.Header?.ToString() == "Склад")
             {
                 column.ItemsSource = склады;
                 column.DisplayMemberPath = "Название";
                 column.SelectedValuePath = "Id";
             }
-            else if (column.Header.ToString() == "Поставщик")
+            else if (column.Header?.ToString() == "Поставщик")
             {
                 column.ItemsSource = поставщики;
                 column.DisplayMemberPath = "Название";
@@ -91,19 +91,27 @@ public partial class MainWindow : Window
         // Настройка для таблицы "Расход"
         foreach (var column in GridРасход.Columns.OfType<DataGridComboBoxColumn>())
         {
-            if (column.Header.ToString() == "Товар")
+            if (column.Header?.ToString()?.StartsWith("Товар") == true)
             {
                 column.ItemsSource = товары;
-                column.DisplayMemberPath = "Название";
+                column.DisplayMemberPath = "ПредставлениеДляВыбора";
                 column.SelectedValuePath = "Id";
             }
-            else if (column.Header.ToString() == "Склад")
+            else if (column.Header?.ToString() == "Склад")
             {
                 column.ItemsSource = склады;
                 column.DisplayMemberPath = "Название";
                 column.SelectedValuePath = "Id";
             }
         }
+    }
+
+
+    private static void ПодготовитьДанныеТоваров(Товары товар)
+    {
+        товар.Название = товар.Название?.Trim() ?? string.Empty;
+        товар.Артикул = string.IsNullOrWhiteSpace(товар.Артикул) ? null : товар.Артикул.Trim();
+        товар.Категория = string.IsNullOrWhiteSpace(товар.Категория) ? null : товар.Категория.Trim();
     }
 
     // --- УНИВЕРСАЛЬНЫЙ МЕТОД СОХРАНЕНИЯ ДЛЯ ТАБЛИЦ ---
@@ -191,11 +199,20 @@ public partial class MainWindow : Window
     {
         await SaveChangesForEntityAsync<Товары>("Товары", (товар) =>
         {
+            ПодготовитьДанныеТоваров(товар);
+
             if (string.IsNullOrWhiteSpace(товар.Название))
             {
                 MessageBox.Show("Название товара не может быть пустым!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
+            if (string.IsNullOrWhiteSpace(товар.Артикул))
+            {
+                MessageBox.Show("Артикул товара обязателен: он используется как основной идентификатор в документах.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
             return true;
         });
     }
@@ -455,23 +472,19 @@ public partial class MainWindow : Window
         DateTime? датаС = ОтчетДатаС.SelectedDate;
         DateTime? датаПо = ОтчетДатаПо.SelectedDate;
 
-        if (!датаС.HasValue || !датаПо.HasValue)
-        {
-            MessageBox.Show("Выберите начальную и конечную даты периода.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-            return;
-        }
+        DateTime датаСФильтра = датаС?.Date ?? DateTime.MinValue;
+        DateTime датаПоФильтра = датаПо?.Date.AddDays(1).AddTicks(-1) ?? DateTime.MaxValue;
 
-        // Корректируем дату "по", чтобы включить весь конечный день
-        DateTime датаПоUtc = датаПо.Value.Date.AddDays(1).AddTicks(-1);
-
-        StatusText.Text = "⏳ Формирование отчёта...";
+        StatusText.Text = датаС.HasValue && датаПо.HasValue
+            ? "⏳ Формирование отчёта за выбранный период..."
+            : "⏳ Формирование полной истории операций...";
         try
         {
             var приходы = await _context.Приход
                 .Include(p => p.Товар)
                 .Include(p => p.Склад)
                 .Include(p => p.Поставщик)
-                .Where(p => p.Дата >= датаС && p.Дата <= датаПоUtc)
+                .Where(p => p.Дата >= датаСФильтра && p.Дата <= датаПоФильтра)
                 .Select(p => new ОтчетПоДвижению
                 {
                     Товар = p.Товар.Название,
@@ -487,7 +500,7 @@ public partial class MainWindow : Window
             var расходы = await _context.Расход
                 .Include(r => r.Товар)
                 .Include(r => r.Склад)
-                .Where(r => r.Дата >= датаС && r.Дата <= датаПоUtc)
+                .Where(r => r.Дата >= датаСФильтра && r.Дата <= датаПоФильтра)
                 .Select(r => new ОтчетПоДвижению
                 {
                     Товар = r.Товар.Название,
@@ -503,7 +516,8 @@ public partial class MainWindow : Window
             var отчет = приходы.Concat(расходы).OrderBy(x => x.Дата).ToList();
 
             GridОтчет.ItemsSource = отчет;
-            StatusText.Text = $"✅ Отчёт сформирован. Найдено записей: {отчет.Count}";
+            StatusText.Text = $"✅ Отчёт сформирован. Найдено записей: {отчет.Count}" +
+                (датаС.HasValue && датаПо.HasValue ? string.Empty : " (полная история)");
         }
         catch (Exception ex)
         {
