@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using Microsoft.EntityFrameworkCore;
+using WpfApp22.Application;
 using WpfApp22.Models;
 
 namespace WpfApp22;
@@ -14,11 +15,13 @@ namespace WpfApp22;
 public partial class MainWindow : Window
 {
     private СкладскойУчётContext _context;
+    private ОтчётыСервис _отчётыСервис;
 
     public MainWindow()
     {
         InitializeComponent();
         _context = new СкладскойУчётContext();
+        _отчётыСервис = new ОтчётыСервис(_context);
         DataContext = this;
         LoadAllData();
     }
@@ -107,13 +110,6 @@ public partial class MainWindow : Window
     }
 
 
-    private static void ПодготовитьДанныеТоваров(Товары товар)
-    {
-        товар.Название = товар.Название?.Trim() ?? string.Empty;
-        товар.Артикул = string.IsNullOrWhiteSpace(товар.Артикул) ? null : товар.Артикул.Trim();
-        товар.Категория = string.IsNullOrWhiteSpace(товар.Категория) ? null : товар.Категория.Trim();
-    }
-
     // --- УНИВЕРСАЛЬНЫЙ МЕТОД СОХРАНЕНИЯ ДЛЯ ТАБЛИЦ ---
     private async Task<bool> SaveChangesForEntityAsync<T>(string entityName, Func<T, bool>? validate = null) where T : class
     {
@@ -199,7 +195,7 @@ public partial class MainWindow : Window
     {
         await SaveChangesForEntityAsync<Товары>("Товары", (товар) =>
         {
-            ПодготовитьДанныеТоваров(товар);
+            ТоварыСервис.Подготовить(товар);
 
             if (string.IsNullOrWhiteSpace(товар.Название))
             {
@@ -472,50 +468,12 @@ public partial class MainWindow : Window
         DateTime? датаС = ОтчетДатаС.SelectedDate;
         DateTime? датаПо = ОтчетДатаПо.SelectedDate;
 
-        DateTime датаСФильтра = датаС?.Date ?? DateTime.MinValue;
-        DateTime датаПоФильтра = датаПо?.Date.AddDays(1).AddTicks(-1) ?? DateTime.MaxValue;
-
         StatusText.Text = датаС.HasValue && датаПо.HasValue
             ? "⏳ Формирование отчёта за выбранный период..."
             : "⏳ Формирование полной истории операций...";
         try
         {
-            var приходы = await _context.Приход
-                .Include(p => p.Товар)
-                .Include(p => p.Склад)
-                .Include(p => p.Поставщик)
-                .Where(p => p.Дата >= датаСФильтра && p.Дата <= датаПоФильтра)
-                .Select(p => new ОтчетПоДвижению
-                {
-                    Товар = p.Товар.Название,
-                    Склад = p.Склад.Название,
-                    Тип = "Приход",
-                    Количество = p.Количество,
-                    Цена = p.Цена,
-                    Дата = p.Дата.Value,
-                    Контрагент = p.Поставщик.Название,
-                    ОснованиеОперации = "Поступление от поставщика"
-                })
-                .ToListAsync();
-
-            var расходы = await _context.Расход
-                .Include(r => r.Товар)
-                .Include(r => r.Склад)
-                .Where(r => r.Дата >= датаСФильтра && r.Дата <= датаПоФильтра)
-                .Select(r => new ОтчетПоДвижению
-                {
-                    Товар = r.Товар.Название,
-                    Склад = r.Склад.Название,
-                    Тип = "Расход",
-                    Количество = r.Количество,
-                    Цена = null,
-                    Дата = r.Дата.Value,
-                    Контрагент = "—",
-                    ОснованиеОперации = string.IsNullOrWhiteSpace(r.Причина) ? "Не указана" : r.Причина
-                })
-                .ToListAsync();
-
-            var отчет = приходы.Concat(расходы).OrderBy(x => x.Дата).ToList();
+            var отчет = await _отчётыСервис.СформироватьОтчетПоДвижениюAsync(датаС, датаПо);
 
             GridОтчет.ItemsSource = отчет;
             StatusText.Text = $"✅ Отчёт сформирован. Найдено записей: {отчет.Count}" +
@@ -539,6 +497,7 @@ public partial class MainWindow : Window
 
         _context.Dispose();
         _context = new СкладскойУчётContext();
+        _отчётыСервис = new ОтчётыСервис(_context);
         LoadAllData();
 
         // Восстанавливаем фильтры
