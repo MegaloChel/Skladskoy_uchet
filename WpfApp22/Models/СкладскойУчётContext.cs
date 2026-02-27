@@ -34,14 +34,12 @@ public partial class СкладскойУчётContext : DbContext
                 .AddJsonFile("appsettings.json")
                 .Build();
 
-            var connectionString = Environment.GetEnvironmentVariable("WAREHOUSE_DB_CONNECTION")
-                ?? configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 throw new InvalidOperationException(
-                    "Не задана строка подключения к БД. Укажите переменную окружения WAREHOUSE_DB_CONNECTION " +
-                    "или заполните ConnectionStrings:DefaultConnection в appsettings.json.");
+                    "Не задана строка подключения к БД в appsettings.json (ConnectionStrings:DefaultConnection).");
             }
 
             optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
