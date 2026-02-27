@@ -347,6 +347,19 @@
                                         <TextBlock Text="Резерв" FontSize="12"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Command="{Binding UnreserveCommand}"
+                                        ToolTip="Снять часть товара с резерва"
+                                        Padding="10,5"
+                                        Background="#f59e0b"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        Cursor="Hand"
+                                        Margin="0,0,10,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="🔓" FontSize="14" Margin="0,0,5,0"/>
+                                        <TextBlock Text="Снять резерв" FontSize="12"/>
+                                    </StackPanel>
+                                </Button>
                                 <Button Command="{Binding FullRecountCommand}"
                                         ToolTip="Полная очистка и пересчёт остатков"
                                         Padding="10,5"

@@ -45,6 +45,7 @@ public partial class MainWindow : Window
             SaveПриход,
             SaveРасход,
             Зарезервировать,
+            СнятьСРезерва,
             ПолныйПересчётОстатков,
             СброситьФильтрПриход,
             СброситьФильтрРасход,
@@ -149,7 +150,7 @@ public partial class MainWindow : Window
             .Where(x => x != CollectionView.NewItemPlaceholder)
             .ToList();
 
-        if (selected.Count <= 1)
+        if (selected.Count == 0)
             return;
 
         var result = MessageBox.Show(
@@ -168,10 +169,18 @@ public partial class MainWindow : Window
         {
             foreach (var entity in selected)
             {
-                _context.Remove(entity);
+                var entry = _context.Entry(entity);
+                if (entry.State == EntityState.Added)
+                {
+                    entry.State = EntityState.Detached;
+                }
+                else
+                {
+                    _context.Remove(entity);
+                }
             }
 
-            _viewModel.StatusMessage = $"🗑 Выбрано к удалению: {selected.Count}. Нажмите сохранить на вкладке для фиксации.";
+            _viewModel.StatusMessage = $"🗑 Помечено к удалению: {selected.Count}. Нажмите сохранить на вкладке для фиксации.";
             e.Handled = true;
         }
         catch (Exception ex)
@@ -269,6 +278,7 @@ public partial class MainWindow : Window
     private void SaveРасход() => SaveРасход_Click(null!, null!);
 
     private void Зарезервировать() => Зарезервировать_Click(null!, null!);
+    private void СнятьСРезерва() => СнятьСРезерва_Click(null!, null!);
     private void ПолныйПересчётОстатков() => ПолныйПересчётОстатков_Click(null!, null!);
     private void СброситьФильтрПриход() => СброситьФильтрПриход_Click(null!, null!);
     private void СброситьФильтрРасход() => СброситьФильтрРасход_Click(null!, null!);
@@ -374,6 +384,19 @@ public partial class MainWindow : Window
                 MessageBox.Show("Выберите склад в расходе!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return false;
             }
+
+            int доступноНаСкладе = _context.Остатки.Local
+                .Where(x => x.ТоварId == расход.ТоварId && x.СкладId == расход.СкладId)
+                .Select(x => x.Доступно)
+                .FirstOrDefault();
+
+            if (расход.Количество > доступноНаСкладе)
+            {
+                MessageBox.Show($"Недостаточно товара для расхода. Доступно: {доступноНаСкладе}, запрошено: {расход.Количество}.",
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
             return true;
         });
     }
@@ -544,6 +567,79 @@ public partial class MainWindow : Window
             MessageBox.Show("Выберите строку в таблице остатков.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
+
+
+    private void СнятьСРезерва_Click(object sender, RoutedEventArgs e)
+    {
+        if (GridОстатки.SelectedItem is not Остатки выбранныйОстаток)
+        {
+            MessageBox.Show("Выберите строку в таблице остатков.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (выбранныйОстаток.В_Резерве <= 0)
+        {
+            MessageBox.Show("Для выбранной позиции нет зарезервированного количества.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var диалог = new Window
+        {
+            Title = "Снятие с резерва",
+            Width = 320,
+            Height = 220,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            Owner = this
+        };
+
+        var stackPanel = new StackPanel { Margin = new Thickness(10) };
+        stackPanel.Children.Add(new TextBlock { Text = $"Товар: {выбранныйОстаток.Товар?.Название}" });
+        stackPanel.Children.Add(new TextBlock { Text = $"Склад: {выбранныйОстаток.Склад?.Название}" });
+        stackPanel.Children.Add(new TextBlock { Text = $"В резерве: {выбранныйОстаток.В_Резерве}" });
+
+        var textBox = new TextBox { Margin = new Thickness(0, 10, 0, 10) };
+        stackPanel.Children.Add(new TextBlock { Text = "Количество для снятия с резерва:" });
+        stackPanel.Children.Add(textBox);
+
+        var buttonPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var okButton = new Button { Content = "OK", Width = 60, Margin = new Thickness(0, 0, 10, 0), IsDefault = true };
+        var cancelButton = new Button { Content = "Отмена", Width = 70, IsCancel = true };
+
+        okButton.Click += (s, args) =>
+        {
+            if (!int.TryParse(textBox.Text, out int количество) || количество <= 0)
+            {
+                MessageBox.Show("Введите корректное положительное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (количество > выбранныйОстаток.В_Резерве)
+            {
+                MessageBox.Show($"Нельзя снять больше, чем в резерве. В резерве: {выбранныйОстаток.В_Резерве}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                выбранныйОстаток.В_Резерве -= количество;
+                _context.SaveChanges();
+                _viewModel.StatusMessage = $"✅ Снято с резерва: {количество} ед.";
+                диалог.DialogResult = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка сохранения: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+
+        buttonPanel.Children.Add(okButton);
+        buttonPanel.Children.Add(cancelButton);
+        stackPanel.Children.Add(buttonPanel);
+
+        диалог.Content = stackPanel;
+        диалог.ShowDialog();
+    }
+
 
     // --- ОТЧЁТНОСТЬ ---
     private async Task BuildReportAsync()

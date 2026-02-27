@@ -18,6 +18,7 @@ public class MainViewModel : INotifyPropertyChanged
         Action saveIncomeAction,
         Action saveOutcomeAction,
         Action reserveAction,
+        Action unreserveAction,
         Action fullRecountAction,
         Action resetIncomeFilterAction,
         Action resetOutcomeFilterAction,
@@ -32,6 +33,7 @@ public class MainViewModel : INotifyPropertyChanged
         SaveIncomeCommand = new RelayCommand(saveIncomeAction);
         SaveOutcomeCommand = new RelayCommand(saveOutcomeAction);
         ReserveCommand = new RelayCommand(reserveAction);
+        UnreserveCommand = new RelayCommand(unreserveAction);
         FullRecountCommand = new RelayCommand(fullRecountAction);
         ResetIncomeFilterCommand = new RelayCommand(resetIncomeFilterAction);
         ResetOutcomeFilterCommand = new RelayCommand(resetOutcomeFilterAction);
@@ -60,6 +62,7 @@ public class MainViewModel : INotifyPropertyChanged
     public ICommand SaveIncomeCommand { get; }
     public ICommand SaveOutcomeCommand { get; }
     public ICommand ReserveCommand { get; }
+    public ICommand UnreserveCommand { get; }
     public ICommand FullRecountCommand { get; }
     public ICommand ResetIncomeFilterCommand { get; }
     public ICommand ResetOutcomeFilterCommand { get; }
