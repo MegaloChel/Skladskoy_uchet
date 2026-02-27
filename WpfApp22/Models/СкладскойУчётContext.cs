@@ -44,7 +44,13 @@ public partial class СкладскойУчётContext : DbContext
                     "или заполните ConnectionStrings:DefaultConnection в appsettings.json.");
             }
 
-            optionsBuilder.UseSqlServer(connectionString);
+            optionsBuilder.UseSqlServer(connectionString, sqlOptions =>
+            {
+                sqlOptions.EnableRetryOnFailure(
+                    maxRetryCount: 5,
+                    maxRetryDelay: TimeSpan.FromSeconds(10),
+                    errorNumbersToAdd: null);
+            });
         }
     }
 
