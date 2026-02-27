@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using WpfApp22.Services;
@@ -137,6 +138,51 @@ public partial class MainWindow : Window
 
 
     // --- УНИВЕРСАЛЬНЫЙ МЕТОД СОХРАНЕНИЯ ДЛЯ ТАБЛИЦ ---
+
+    private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Delete || sender is not DataGrid grid)
+            return;
+
+        var selected = grid.SelectedItems
+            .Cast<object>()
+            .Where(x => x != CollectionView.NewItemPlaceholder)
+            .ToList();
+
+        if (selected.Count <= 1)
+            return;
+
+        var result = MessageBox.Show(
+            $"Удалить выбранные записи ({selected.Count})?",
+            "Подтверждение удаления",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            e.Handled = true;
+            return;
+        }
+
+        try
+        {
+            foreach (var entity in selected)
+            {
+                _context.Remove(entity);
+            }
+
+            _viewModel.StatusMessage = $"🗑 Выбрано к удалению: {selected.Count}. Нажмите сохранить на вкладке для фиксации.";
+            e.Handled = true;
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusMessage = "❌ Ошибка удаления выбранных строк";
+            MessageBox.Show($"Не удалось пометить выбранные записи на удаление: {ex.Message}",
+                "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        }
+    }
+
     private async Task<bool> SaveChangesForEntityAsync<T>(string entityName, Func<T, bool>? validate = null) where T : class
     {
         try

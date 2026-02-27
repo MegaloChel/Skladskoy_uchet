@@ -162,6 +162,7 @@
 
                     <DataGrid Grid.Row="2"
                               x:Name="GridТовары"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
                               AutoGenerateColumns="False"
                               CanUserAddRows="True">
                         <DataGrid.Columns>
@@ -218,6 +219,7 @@
 
                     <DataGrid Grid.Row="1"
                               x:Name="GridСклады"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
                               AutoGenerateColumns="False"
                               CanUserAddRows="True"
                               Margin="5">
@@ -274,6 +276,7 @@
 
                     <DataGrid Grid.Row="1"
                               x:Name="GridПоставщики"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
                               AutoGenerateColumns="False"
                               CanUserAddRows="True"
                               Margin="5">
@@ -449,6 +452,7 @@
 
                     <DataGrid Grid.Row="2"
                               x:Name="GridПриход"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
                               AutoGenerateColumns="False"
                               CanUserAddRows="True"
                               Margin="5">
@@ -534,6 +538,7 @@
 
                     <DataGrid Grid.Row="2"
                               x:Name="GridРасход"
+                              PreviewKeyDown="DataGrid_PreviewKeyDown"
                               AutoGenerateColumns="False"
                               CanUserAddRows="True"
                               Margin="5">
