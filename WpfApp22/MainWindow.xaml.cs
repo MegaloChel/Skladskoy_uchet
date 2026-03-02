@@ -167,20 +167,43 @@ public partial class MainWindow : Window
 
         try
         {
+            int removedCount = 0;
+            var blockedReasons = new List<string>();
+
             foreach (var entity in selected)
             {
                 var entry = _context.Entry(entity);
                 if (entry.State == EntityState.Added)
                 {
                     entry.State = EntityState.Detached;
+                    removedCount++;
+                    continue;
                 }
-                else
+
+                if (!CanDeleteEntity(entity, out var reason))
                 {
-                    _context.Remove(entity);
+                    blockedReasons.Add(reason);
+                    continue;
                 }
+
+                _context.Remove(entity);
+                removedCount++;
             }
 
-            _viewModel.StatusMessage = $"🗑 Помечено к удалению: {selected.Count}. Нажмите сохранить на вкладке для фиксации.";
+            if (blockedReasons.Count > 0)
+            {
+                MessageBox.Show(
+                    "Некоторые записи нельзя удалить из-за связанных данных:" + Environment.NewLine + Environment.NewLine +
+                    string.Join(Environment.NewLine, blockedReasons.Distinct()),
+                    "Ограничение удаления",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+
+            _viewModel.StatusMessage = removedCount > 0
+                ? $"🗑 Помечено к удалению: {removedCount}. Нажмите сохранить на вкладке для фиксации."
+                : "ℹ️ Нет записей, доступных для удаления.";
+
             e.Handled = true;
         }
         catch (Exception ex)
@@ -190,6 +213,45 @@ public partial class MainWindow : Window
                 "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
         }
+    }
+
+
+    private bool CanDeleteEntity(object entity, out string reason)
+    {
+        reason = string.Empty;
+
+        switch (entity)
+        {
+            case Товары товар:
+                if (_context.Остатки.Any(x => x.ТоварId == товар.Id)
+                    || _context.Приход.Any(x => x.ТоварId == товар.Id)
+                    || _context.Расход.Any(x => x.ТоварId == товар.Id))
+                {
+                    reason = $"Товар '{товар.Название}' используется в движениях или остатках.";
+                    return false;
+                }
+                break;
+
+            case Склады склад:
+                if (_context.Остатки.Any(x => x.СкладId == склад.Id)
+                    || _context.Приход.Any(x => x.СкладId == склад.Id)
+                    || _context.Расход.Any(x => x.СкладId == склад.Id))
+                {
+                    reason = $"Склад '{склад.Название}' используется в движениях или остатках.";
+                    return false;
+                }
+                break;
+
+            case Поставщики поставщик:
+                if (_context.Приход.Any(x => x.ПоставщикId == поставщик.Id))
+                {
+                    reason = $"Поставщик '{поставщик.Название}' используется в приходах.";
+                    return false;
+                }
+                break;
+        }
+
+        return true;
     }
 
     private async Task<bool> SaveChangesForEntityAsync<T>(string entityName, Func<T, bool>? validate = null) where T : class
