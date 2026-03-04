@@ -28,7 +28,6 @@ public partial class Товары
         ? $"(без артикула) — {Название}"
         : $"{Артикул} — {Название}";
 
-    // --- НАВИГАЦИОННЫЕ СВОЙСТВА ---
     [InverseProperty("Товар")]
     public virtual ICollection<Приход> Приход { get; set; } = new List<Приход>();
 

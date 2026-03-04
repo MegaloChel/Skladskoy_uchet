@@ -1,4 +1,3 @@
-﻿// C:\Users\иван челик\source\repos\Skladskoy_uchet\WpfApp22\MainWindow.xaml.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +20,6 @@ public partial class MainWindow : Window
     private ОтчётыСервис _отчётыСервис;
     private readonly MainViewModel _viewModel;
     private readonly Stack<List<ChangeOperation>> _redoStack = new();
-
 
     private sealed class ChangeOperation
     {
@@ -60,7 +58,6 @@ public partial class MainWindow : Window
         _viewModel.StatusMessage = "⏳ Загрузка таблиц...";
         try
         {
-            // 1. Загружаем все таблицы С ОТСЛЕЖИВАНИЕМ, чтобы редактирование в DataGrid сохранялось.
             await _context.Товары.LoadAsync();
             await _context.Склады.LoadAsync();
             await _context.Поставщики.LoadAsync();
@@ -71,7 +68,6 @@ public partial class MainWindow : Window
                 .Include(о => о.Склад)
                 .LoadAsync();
 
-            // 2. Источники данных для гридов — локальные коллекции EF (tracked).
             GridТовары.ItemsSource = _context.Товары.Local.ToObservableCollection();
             GridСклады.ItemsSource = _context.Склады.Local.ToObservableCollection();
             GridПоставщики.ItemsSource = _context.Поставщики.Local.ToObservableCollection();
@@ -79,7 +75,6 @@ public partial class MainWindow : Window
             GridРасход.ItemsSource = _context.Расход.Local.ToObservableCollection();
             GridОстатки.ItemsSource = _context.Остатки.Local.ToObservableCollection();
 
-            // 3. Настраиваем ComboBox'ы в гридах движений (источник — актуальные tracked-справочники).
             SetupComboBoxColumns(
                 _context.Товары.Local.ToList(),
                 _context.Склады.Local.ToList(),
@@ -96,7 +91,6 @@ public partial class MainWindow : Window
 
     private void SetupComboBoxColumns(List<Товары> товары, List<Склады> склады, List<Поставщики> поставщики)
     {
-        // Настройка для таблицы "Приход"
         foreach (var column in GridПриход.Columns.OfType<DataGridComboBoxColumn>())
         {
             if (column.Header?.ToString()?.StartsWith("Товар") == true)
@@ -119,7 +113,6 @@ public partial class MainWindow : Window
             }
         }
 
-        // Настройка для таблицы "Расход"
         foreach (var column in GridРасход.Columns.OfType<DataGridComboBoxColumn>())
         {
             if (column.Header?.ToString()?.StartsWith("Товар") == true)
@@ -136,9 +129,6 @@ public partial class MainWindow : Window
             }
         }
     }
-
-
-    // --- УНИВЕРСАЛЬНЫЙ МЕТОД СОХРАНЕНИЯ ДЛЯ ТАБЛИЦ ---
 
     private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
     {
@@ -215,7 +205,6 @@ public partial class MainWindow : Window
         }
     }
 
-
     private bool CanDeleteEntity(object entity, out string reason)
     {
         reason = string.Empty;
@@ -258,7 +247,6 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Проверяем, есть ли изменения в указанном типе сущности
             var entries = _context.ChangeTracker.Entries<T>()
                 .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted)
                 .ToList();
@@ -269,7 +257,6 @@ public partial class MainWindow : Window
                 return true; // Не ошибка, просто нечего сохранять
             }
 
-            // Валидация (если передана)
             if (validate != null)
             {
                 foreach (var entry in entries.Where(e => e.State != EntityState.Deleted))
@@ -286,13 +273,11 @@ public partial class MainWindow : Window
             _redoStack.Clear();
             _viewModel.StatusMessage = $"✅ Таблица '{entityName}' сохранена. Строк: {count}";
 
-            // Если сохраняли движения, пересчитываем остатки
             if (typeof(T) == typeof(Приход) || typeof(T) == typeof(Расход))
             {
                 await UpdateBalancesAsync();
             }
 
-            // ОБНОВЛЯЕМ СПРАВОЧНИКИ В ВЫПАДАЮЩИХ СПИСКАХ, если сохраняли их
             if (typeof(T) == typeof(Товары) || typeof(T) == typeof(Склады) || typeof(T) == typeof(Поставщики))
             {
                 await RefreshLookupsAsync();
@@ -317,10 +302,8 @@ public partial class MainWindow : Window
         }
     }
 
-    // --- ОБНОВЛЕНИЕ ВЫПАДАЮЩИХ СПИСКОВ ---
     private Task RefreshLookupsAsync()
     {
-        // Для сохранения/редактирования используем tracked-локальные коллекции EF.
         var товары = _context.Товары.Local.ToList();
         var склады = _context.Склады.Local.ToList();
         var поставщики = _context.Поставщики.Local.ToList();
@@ -345,7 +328,6 @@ public partial class MainWindow : Window
     private void СброситьФильтрПриход() => СброситьФильтрПриход_Click(null!, null!);
     private void СброситьФильтрРасход() => СброситьФильтрРасход_Click(null!, null!);
 
-    // --- МЕТОДЫ СОХРАНЕНИЯ ДЛЯ КАЖДОЙ ТАБЛИЦЫ ---
     private async void SaveТовары_Click(object sender, RoutedEventArgs e)
     {
         await SaveChangesForEntityAsync<Товары>("Товары", (товар) =>
@@ -463,14 +445,12 @@ public partial class MainWindow : Window
         });
     }
 
-    // --- ПЕРЕСЧЁТ ОСТАТКОВ (улучшенная версия) ---
     private async Task UpdateBalancesAsync()
     {
         try
         {
             _viewModel.StatusMessage = "🔄 Пересчёт остатков...";
 
-            // Группируем приходы и расходы прямо в базе данных для эффективности
             var приходы = await _context.Приход
                 .GroupBy(x => new { x.ТоварId, x.СкладId })
                 .Select(g => new { g.Key.ТоварId, g.Key.СкладId, Количество = g.Sum(x => x.Количество) })
@@ -481,13 +461,10 @@ public partial class MainWindow : Window
                 .Select(g => new { g.Key.ТоварId, g.Key.СкладId, Количество = g.Sum(x => x.Количество) })
                 .ToDictionaryAsync(x => (x.ТоварId, x.СкладId), x => x.Количество);
 
-            // Получаем все ключи (уникальные пары Товар-Склад) из обоих словарей
             var всеКлючи = приходы.Keys.Union(расходы.Keys).ToList();
 
-            // Получаем текущие остатки из БД (чтобы знать их ID)
             var текущиеОстаткиВБд = await _context.Остатки.ToDictionaryAsync(x => (x.ТоварId, x.СкладId));
 
-            // Словарь для новых значений остатков
             var новыеОстатки = new Dictionary<(int ТоварId, int СкладId), int>();
 
             foreach (var key in всеКлючи)
@@ -501,7 +478,6 @@ public partial class MainWindow : Window
                 }
             }
 
-            // 1. Удаляем остатки, которых больше нет
             foreach (var остаток in текущиеОстаткиВБд)
             {
                 if (!новыеОстатки.ContainsKey(остаток.Key))
@@ -510,17 +486,14 @@ public partial class MainWindow : Window
                 }
             }
 
-            // 2. Обновляем существующие или добавляем новые
             foreach (var kvp in новыеОстатки)
             {
                 if (текущиеОстаткиВБд.TryGetValue(kvp.Key, out var существующийОстаток))
                 {
-                    // Обновляем количество, резерв не трогаем
                     существующийОстаток.Количество = kvp.Value;
                 }
                 else
                 {
-                    // Добавляем новый остаток
                     _context.Остатки.Add(new Остатки
                     {
                         ТоварId = kvp.Key.ТоварId,
@@ -541,7 +514,6 @@ public partial class MainWindow : Window
         }
     }
 
-    // *** ВОТ НЕДОСТАЮЩИЙ МЕТОД ***
     private async void ПолныйПересчётОстатков_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -560,7 +532,6 @@ public partial class MainWindow : Window
         }
     }
 
-    // --- УПРАВЛЕНИЕ РЕЗЕРВАМИ ---
     private void Зарезервировать_Click(object sender, RoutedEventArgs e)
     {
         if (GridОстатки.SelectedItem is Остатки выбранныйОстаток)
@@ -594,7 +565,6 @@ public partial class MainWindow : Window
                     if (количество <= выбранныйОстаток.Доступно)
                     {
                         выбранныйОстаток.В_Резерве += количество;
-                        // Сохраняем изменение в остатках немедленно, так как это критично
                         try
                         {
                             _context.SaveChanges();
@@ -629,7 +599,6 @@ public partial class MainWindow : Window
             MessageBox.Show("Выберите строку в таблице остатков.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
-
 
     private void СнятьСРезерва_Click(object sender, RoutedEventArgs e)
     {
@@ -702,8 +671,6 @@ public partial class MainWindow : Window
         диалог.ShowDialog();
     }
 
-
-    // --- ОТЧЁТНОСТЬ ---
     private async Task BuildReportAsync()
     {
         DateTime? датаС = ОтчетДатаС.SelectedDate;
@@ -727,16 +694,13 @@ public partial class MainWindow : Window
         }
     }
 
-
     private async void BuildReport()
     {
         await BuildReportAsync();
     }
 
-    // --- ФИЛЬТРАЦИЯ И ОБНОВЛЕНИЕ (исправленные методы) ---
     private void Refresh()
     {
-        // Сохраняем состояние фильтров перед перезагрузкой
         var приходФильтрС = ПриходДатаС.SelectedDate;
         var приходФильтрПо = ПриходДатаПо.SelectedDate;
         var расходФильтрС = РасходДатаС.SelectedDate;
@@ -748,13 +712,11 @@ public partial class MainWindow : Window
         _отчётыСервис = new ОтчётыСервис(_context);
         LoadAllData();
 
-        // Восстанавливаем фильтры
         ПриходДатаС.SelectedDate = приходФильтрС;
         ПриходДатаПо.SelectedDate = приходФильтрПо;
         РасходДатаС.SelectedDate = расходФильтрС;
         РасходДатаПо.SelectedDate = расходФильтрПо;
 
-        // Применяем фильтры заново
         if (приходФильтрС.HasValue || приходФильтрПо.HasValue)
             ФильтрПриход_Changed(null, null);
         if (расходФильтрС.HasValue || расходФильтрПо.HasValue)
@@ -766,8 +728,6 @@ public partial class MainWindow : Window
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         string filter = SearchBox.Text.Trim().ToLower();
-        // Важно: ItemsSource может быть списком без отслеживания или ObservableCollection.
-        // Получаем представление напрямую из DataGrid, если ItemsSource установлен.
         if (GridТовары.ItemsSource != null)
         {
             var view = CollectionViewSource.GetDefaultView(GridТовары.ItemsSource);

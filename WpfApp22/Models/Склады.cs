@@ -20,7 +20,6 @@ public partial class Склады
     [StringLength(255)]
     public string? Адрес { get; set; }
 
-    // --- НАВИГАЦИОННЫЕ СВОЙСТВА ---
     [InverseProperty("Склад")]
     public virtual ICollection<Приход> Приход { get; set; } = new List<Приход>();
 
