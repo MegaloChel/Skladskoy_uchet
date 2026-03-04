@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
-		<!-- ТОЧНО так! -->
+		
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
@@ -21,7 +21,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- ВЕРСИЯ 8.0.0, не 10.x! -->
+		
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
@@ -36,7 +36,7 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.3" />
 	</ItemGroup>
 
-	<!-- Этот блок ОБЯЗАТЕЛЬНО -->
+	
 	<ItemGroup>
 		<None Update="appsettings.json">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>

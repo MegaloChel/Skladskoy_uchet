@@ -23,7 +23,11 @@ public partial class Товары
     [StringLength(50)]
     public string? Категория { get; set; }
 
-    // --- НАВИГАЦИОННЫЕ СВОЙСТВА ---
+    [NotMapped]
+    public string ПредставлениеДляВыбора => string.IsNullOrWhiteSpace(Артикул)
+        ? $"(без артикула) — {Название}"
+        : $"{Артикул} — {Название}";
+
     [InverseProperty("Товар")]
     public virtual ICollection<Приход> Приход { get; set; } = new List<Приход>();
 

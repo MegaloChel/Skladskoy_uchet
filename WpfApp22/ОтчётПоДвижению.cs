@@ -15,6 +15,7 @@ namespace WpfApp22.Models
         public int Количество { get; set; }
         public decimal? Цена { get; set; } // Цена есть только у прихода
         public DateTime Дата { get; set; }
-        public string Документ { get; set; } = null!; // Причина расхода или поставщик
+        public string Контрагент { get; set; } = "—"; // Поставщик для прихода
+        public string ОснованиеОперации { get; set; } = "—"; // Причина/комментарий для расхода
     }
 }
